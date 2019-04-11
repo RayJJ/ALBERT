@@ -1,4 +1,4 @@
-#A Little Brain ExpeRimenT (ALBERT) 
+# A Little Brain ExpeRimenT (ALBERT) 
 
 ALBERT is a simple Neural Network simulator based loosely on the characteristics of biological 
 neural networks.
