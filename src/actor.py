@@ -1,3 +1,25 @@
+"""
+    Program: ALBERT
+    Module: actor.py
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    version 2 as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+"""
+__author__ = "Ray Jackson"
+__copyright__ = "Copyright 2019, Ray Jackson"
+__credits__ = []
+__license__ = "GNU GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Ray Jackson"
+__email__ = ""
+__status__ = "Production"
+
 from model_spec import DPS, UPS
 from utils import timed_call
 from brain import Brain
@@ -5,10 +27,14 @@ from constants import *
 import time
 import logging
 import cProfile
-# from pprint import pformat as pformat
 
 
 class Actor:
+    """
+    Actor is a container for a Brain.
+    The Actor.live() function brings the actor to life.
+
+    """
 
     def __init__(self, pipe, brain, cell_types, updates_per_second=60, trainer=None, monitor=None, profiling=False):
 
