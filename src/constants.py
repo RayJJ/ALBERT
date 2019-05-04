@@ -27,6 +27,7 @@ MATPLOT = 'matplot'
 TIME_ALIVE_CYCLES = 'time_alive'
 
 DIE = 'die'
+PAUSE = 'pause'
 
 HEATMAP = 'heatmap'
 CELL_MAP = 'cell-map'

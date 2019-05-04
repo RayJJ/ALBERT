@@ -354,7 +354,8 @@ class Plotter(AbsPlotter):
             else:
                 raise (Exception, f'Unrecognised Plot Type "{plot_type}" in plot request.')
 
-    def __init__(self, figure_spec: dict, plot_requests: list, end_app_func: callable = None):
+    def __init__(self, figure_spec: dict, plot_requests: list, pause_func: callable = None,
+                 end_app_func: callable = None):
         """
         Create Plotter() object to provide a data-drive plotting interface for the modelling app.
 
@@ -362,10 +363,11 @@ class Plotter(AbsPlotter):
         :param plot_requests:
         :param end_app_func:
         """
+        self.figure_spec = figure_spec
         self.subplots = None  # dict with key: subplot tuple; value: subplot object
         self.canvas = None
         self._set_plot_config()
-        self.canvas, self.subplots = self._make_plot(end_app_func, figure_spec)
+        self.canvas, self.plot_object, self.subplots = self._make_plot(end_app_func, pause_func, figure_spec)
         self._set_subplot_configs(plot_requests)
         self.data_batch = 0
         plt.ion()
@@ -384,7 +386,7 @@ class Plotter(AbsPlotter):
         plt.style.use('dark_background')
         # === end plot-library specific code
 
-    def _make_plot(self, end_app_func: callable, figure_spec: dict):
+    def _make_plot(self, end_app_func: callable, pause_func: callable, figure_spec: dict):
         """
         Make a plot-library specific window that ends the app when closed.
         Plot-library specific subplots and figure layout are handled here.
@@ -399,13 +401,14 @@ class Plotter(AbsPlotter):
         # create figure and axes
         plot, axes = plt.subplots(figure_spec[DIMENSIONS][0], figure_spec[DIMENSIONS][1],
                                   squeeze=False)  # squeeze=False forces 2D axes array
-        plot.suptitle(figure_spec[TITLE], fontsize=16)
+        plot.suptitle(figure_spec[TITLE] + '   (press enter to pause)', fontsize=16)
         plt.subplots_adjust(wspace=0.35, hspace=0.35)
         canvas = plot.canvas
         canvas.mpl_connect('close_event', end_app_func)
+        canvas.mpl_connect('key_press_event', pause_func)
         # === end plot-library specific code
         subplots = self._make_subplots(axes, figure_spec)
-        return canvas, subplots
+        return canvas, plot, subplots
 
     def _make_subplots(self, axes: any, figure_data: dict):
         """
@@ -446,7 +449,13 @@ class Plotter(AbsPlotter):
             self.subplots[request[SUBPLOT]].subplot.set_autoscaley_on(False)
             # === plot-library specific code
 
-    def _draw(self):
+    def show_state(self, paused: bool):
+        if paused:
+            self.plot_object.suptitle(self.figure_spec[TITLE] + ' (press enter to unpause)', fontsize=16)
+        else:
+            self.plot_object.suptitle(self.figure_spec[TITLE] + '   (press enter to pause)  ', fontsize=16)
+
+    def draw(self):
         """
         Draw all pending graphics.
 
@@ -468,4 +477,4 @@ class Plotter(AbsPlotter):
             self.subplots[request[SUBPLOT]].plot(request)
         self.data_batch += 1
         if self.data_batch % DPS == 0:
-            self._draw()
+            self.draw()

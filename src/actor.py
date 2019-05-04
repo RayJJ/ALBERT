@@ -74,6 +74,7 @@ class Actor:
     def live(self):
 
         self.alive = True
+        paused = False
 
         # calc time per cycle through the model
         time_per_cycle = NS / self.updates_per_second
@@ -85,12 +86,23 @@ class Actor:
 
         while self.alive:
 
-            # end this process when requested
+            # check for user commands
             if self.pipe.poll():
-                if self.pipe.recv() == DIE:
+                message = self.pipe.recv()
+                if message == DIE:
                     logging.info('***** "die" message received. *****')
                     self._die()
                     break
+                elif message == PAUSE:
+                    if paused:
+                        logging.info('***** "un-pause" message received. *****')
+                    else:
+                        logging.info('***** "pause" message received. *****')
+                    paused = not paused
+
+            if paused:
+                # print('paused\n')
+                continue
 
             #  zero times of operations
             time_for_brain = 0

@@ -54,6 +54,7 @@ class Monitor:
         self.monitoring = True
         self.started = False
         self.logged_plot_data = False
+        self.paused = False
 
     def start(self):
         logging.info("*** Starting monitor...")
@@ -62,10 +63,14 @@ class Monitor:
             self.pr.enable()
         # poll pipe for data and update plots until window is closed
         while self.monitoring:
+            if self.paused:
+                # draw flushes ui events ensuring key press events are handled
+                self.plotter.draw()
+                continue
             if self.pipe.poll():  # true when data available
                 self.process_data()
 
-    def _end_app(self, obj):
+    def _end_app(self, event):
         # stop actor's process
         self.pipe.send('die')
         if self.profiling:
@@ -75,6 +80,14 @@ class Monitor:
             # print profile results
             logging.info(self.pr.print_stats(sort="calls"))
         self.monitoring = False
+
+    def _pause_app(self, event):
+        if event.key == 'enter':
+            # pause / un-pause the monitor
+            self.paused = not self.paused
+            # pause / un-pause the model
+            self.pipe.send('pause')
+            self.plotter.show_state(self.paused)
 
     def process_data(self):
         model_state = self.pipe.recv()
@@ -91,8 +104,9 @@ class Monitor:
 
     def _log_once(self, plot_data):
         if not self.logged_plot_data:
-            logging.info('\nFirst plot_data file: \n' +\
-                         '(include a cellmap in the plot_request to see keys and relations for all cell component data)\n\n')
+            logging.info('\nFirst plot_data file: \n' +
+                         '(include a cellmap in the plot_request to see keys and relations' +
+                         ' for all cell component data)\n\n')
             logging.info(pformat(plot_data, compact=False, width=600))
             self.logged_plot_data = True
 
@@ -102,6 +116,6 @@ class Monitor:
 
     def plot_it(self, figure_data, plot_data):
         if self.plotter is None:
-            self.plotter = Plotter(figure_data, plot_data, end_app_func=self._end_app)
+            self.plotter = Plotter(figure_data, plot_data, pause_func=self._pause_app, end_app_func=self._end_app)
         else:
             self.plotter.plot(plot_data)
